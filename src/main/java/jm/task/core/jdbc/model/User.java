@@ -59,4 +59,33 @@ public class User {
     public void setAge(Byte age) {
         this.age = age;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null && this.getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return (name == user.name && name.equals(user.getName()))
+                && (lastName == user.lastName && lastName.equals(user.getLastName()))
+                && (age == user.age);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 37 * result + getName().hashCode();
+        result = 37 * result + getName().hashCode();
+        result = 37 * result + getAge();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "User" +
+                id +
+                " (name='" + name + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", age=" + age +
+                ')';
+    }
 }
