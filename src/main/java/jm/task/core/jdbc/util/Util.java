@@ -1,11 +1,11 @@
 package jm.task.core.jdbc.util;
 
+import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.spi.SessionFactoryServiceRegistryBuilder;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,8 +13,8 @@ import java.sql.SQLException;
 
 public class Util {
     private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String MYSQL_URL = "jdbc:mysql://localhost:3306/mydb";
-    private static final String USER = "root";
+    private static final String MYSQL_JDBC_URL = "jdbc:mysql://localhost:3306/mydb";
+    private static final String LOGIN = "root";
     private static final String PASSWORD = "12345";
 
 
@@ -22,22 +22,33 @@ public class Util {
         Connection connection = null;
         try {
             Class.forName(MYSQL_DRIVER);
-            connection = DriverManager.getConnection(MYSQL_URL, USER, PASSWORD);
+            connection = DriverManager.getConnection(MYSQL_JDBC_URL, LOGIN, PASSWORD);
         } catch (ClassNotFoundException | SQLException e) {
             System.out.println("Problem with connection");
         }
         return connection;
     }
 
+    // В класс Util должна быть добавлена конфигурация для Hibernate (рядом с JDBC), без использования xml.
+    private static final String MYSQL_HIBERNATE_URL = "jdbc:mysql://localhost:3306/mydb_for_hib";
     private static SessionFactory sessionFactory = buildSessionFactory();
-    private static ServiceRegistry serviceRegistry;
 
-    protected static SessionFactory buildSessionFactory() {
-        serviceRegistry = new StandardServiceRegistryBuilder().configure().build();
+    private static SessionFactory buildSessionFactory() {
+        Configuration configuration = new Configuration()
+                .setProperty("hibernate.connection.driver_class", MYSQL_DRIVER)
+                .setProperty("hibernate.connection.url", MYSQL_HIBERNATE_URL)
+                .setProperty("hibernate.connection.username", LOGIN)
+                .setProperty("hibernate.connection.password", PASSWORD)
+                .setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect")
+                .setProperty("hibernate.default_schema", "mydb_for_hib")
+                .setProperty("hibernate.show_sql", "true")
+                .setProperty("hibernate.current_session_context_class","thread")
+                .addAnnotatedClass(jm.task.core.jdbc.model.User.class);
+        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder()
+                .applySettings(configuration.getProperties());
         try {
-            sessionFactory = new MetadataSources(serviceRegistry).buildMetadata().buildSessionFactory();
-        } catch (Exception e) {
-            StandardServiceRegistryBuilder.destroy(serviceRegistry);
+            sessionFactory = configuration.buildSessionFactory(builder.build());
+        } catch (HibernateException e) {
             throw new ExceptionInInitializerError("Initial SessionFactory is failed");
         }
         return sessionFactory;

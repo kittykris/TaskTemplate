@@ -3,11 +3,11 @@ package jm.task.core.jdbc.model;
 import javax.persistence.*;
 
 @Entity
-@Table
+@Table(name = "users")
 public class User {
     @Id
     @Column(nullable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
